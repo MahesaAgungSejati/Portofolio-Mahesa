@@ -780,6 +780,28 @@
             line-height: 1.6;
         }
 
+        /* === Popup Loading Spinner === */
+.popup-loader {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid var(--accent);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s linear infinite;
+  z-index: 10000;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+
         /* CONTACT SECTION */
         .contact-section {
             background: linear-gradient(135deg, var(--dark-gray), rgba(62, 92, 179, 0.15));
@@ -1420,6 +1442,7 @@
 <div id="imagePopup" class="popup-overlay">
   <span class="popup-close">&times;</span>
   <img class="popup-content" id="popupImage" alt="Preview Image">
+    <div class="popup-loader" id="popupLoader"></div>
   <button class="nav-btn prev">&#10094;</button>
   <button class="nav-btn next">&#10095;</button>
 </div>
@@ -1528,61 +1551,91 @@
             observer.observe(el);
         });
 
-  // Ambil elemen popup
-  const popup = document.getElementById("imagePopup");
-  const popupImg = document.getElementById("popupImage");
-  const closeBtn = document.querySelector(".popup-close");
-  const nextBtn = document.querySelector(".next");
-  const prevBtn = document.querySelector(".prev");
+ const popup = document.getElementById("imagePopup");
+const popupImg = document.getElementById("popupImage");
+const closeBtn = document.querySelector(".popup-close");
+const loader = document.getElementById("popupLoader");
 
-  let currentImages = [];
-  let currentIndex = 0;
+const prevBtn = document.querySelector(".prev");
+const nextBtn = document.querySelector(".next");
 
-  // Event: klik gambar — untuk sertifikat dan juga gallery
-  document.querySelectorAll(".popup-trigger").forEach(img => {
-    img.addEventListener("click", (e) => {
-      const parentItem = e.target.closest(".other-item");
-      if (parentItem && parentItem.dataset.images) {
-        // === Jika punya beberapa gambar (gallery) ===
-        currentImages = JSON.parse(parentItem.dataset.images);
-        currentIndex = 0;
-        popupImg.src = currentImages[currentIndex];
-      } else {
-        // === Jika hanya satu gambar (seperti sertifikat) ===
-        currentImages = [img.src];
-        currentIndex = 0;
-        popupImg.src = img.src;
-      }
+let currentImages = [];
+let currentIndex = 0;
 
-      popup.style.display = "block";
-      popup.classList.add("fade-in");
-    });
+// Event: klik gambar di card
+document.querySelectorAll(".other-item").forEach(item => {
+  const images = JSON.parse(item.getAttribute("data-images"));
+  const imgEl = item.querySelector(".popup-trigger");
+
+  imgEl.addEventListener("click", () => {
+    currentImages = images;
+    currentIndex = 0;
+    openPopup(currentImages[currentIndex]);
   });
+});
 
-  // Tombol close
-  closeBtn.addEventListener("click", () => {
+// Buka popup dengan gambar
+function openPopup(src) {
+  popup.style.display = "block";
+  popup.classList.add("fade-in");
+
+  // tampilkan loader
+  loader.style.display = "block";
+  popupImg.style.opacity = "0";
+
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    popupImg.src = src;
+    loader.style.display = "none";
+    popupImg.style.opacity = "1";
+  };
+}
+
+// Tombol navigasi
+nextBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!currentImages.length) return;
+
+  currentIndex = (currentIndex + 1) % currentImages.length;
+  changeImage(currentImages[currentIndex]);
+});
+
+prevBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!currentImages.length) return;
+
+  currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+  changeImage(currentImages[currentIndex]);
+});
+
+// Fungsi ganti gambar dengan loader
+function changeImage(src) {
+  loader.style.display = "block";
+  popupImg.style.opacity = "0";
+
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    popupImg.src = src;
+    loader.style.display = "none";
+    popupImg.style.opacity = "1";
+  };
+}
+
+// Tutup popup
+closeBtn.addEventListener("click", () => {
+  popup.style.display = "none";
+  popup.classList.remove("fade-in");
+});
+
+popup.addEventListener("click", (e) => {
+  if (e.target === popup) {
     popup.style.display = "none";
-  });
+    popup.classList.remove("fade-in");
+  }
+});
 
-  // Klik di luar gambar menutup popup
-  popup.addEventListener("click", (e) => {
-    if (e.target === popup) popup.style.display = "none";
-  });
-
-  // Tombol navigasi gallery
-  nextBtn.addEventListener("click", () => {
-    if (currentImages.length > 1) {
-      currentIndex = (currentIndex + 1) % currentImages.length;
-      popupImg.src = currentImages[currentIndex];
-    }
-  });
-
-  prevBtn.addEventListener("click", () => {
-    if (currentImages.length > 1) {
-      currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
-      popupImg.src = currentImages[currentIndex];
-    }
-  });
     </script>
 </body>
 
