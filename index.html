@@ -18,13 +18,14 @@
         }
 
         :root {
-            --primary: #1E1E2F;
-            --secondary: #3E5CB3;
-            --accent: #00D4FF;
-            --light: #FFFFFF;
-            --dark-gray: #2D2D44;
-            --text-gray: #B0B0B0;
-        }
+  --primary: #1E1E2F;       /* Tetap sama - latar belakang gelap netral */
+  --secondary: #6C4AB6;     /* Ungu utama, menggantikan biru sebelumnya */
+  --accent: #B084F4;        /* Ungu terang / neon accent */
+  --light: #FFFFFF;         /* Warna teks putih tetap */
+  --dark-gray: #2D2D44;     /* Abu gelap untuk elemen card */
+  --text-gray: #C8C4D6;     /* Abu muda keunguan untuk teks sekunder */
+}
+
 
         html {
             scroll-behavior: smooth;
@@ -532,6 +533,7 @@
     opacity: 1;
   }
 }
+
 /* Tombol navigasi gallery */
 .nav-btn {
   position: absolute;
@@ -1011,6 +1013,7 @@
         <li><a href="#portfolio">Portofolio</a></li>
         <li><a href="#certifications">Certifications</a></li>
         <li><a href="#achievements">Achievements</a></li>
+        <li><a href="#organizations">Organizations</a></li>
         <li><a href="#others">Others</a></li>
         <li><a href="#contact">Contact</a></li>
     </ul>
@@ -1562,35 +1565,39 @@
             observer.observe(el);
         });
 
- const popup = document.getElementById("imagePopup");
+const popup = document.getElementById("imagePopup");
 const popupImg = document.getElementById("popupImage");
 const closeBtn = document.querySelector(".popup-close");
 const loader = document.getElementById("popupLoader");
-
 const prevBtn = document.querySelector(".prev");
 const nextBtn = document.querySelector(".next");
 
 let currentImages = [];
 let currentIndex = 0;
 
-// Event: klik gambar di card
-document.querySelectorAll(".other-item").forEach(item => {
-  const images = JSON.parse(item.getAttribute("data-images"));
-  const imgEl = item.querySelector(".popup-trigger");
+// ==== 1️⃣ Handle klik gambar di semua .popup-trigger ====
+document.querySelectorAll(".popup-trigger").forEach(img => {
+  img.addEventListener("click", e => {
+    const parent = e.target.closest("[data-images]");
 
-  imgEl.addEventListener("click", () => {
-    currentImages = images;
+    if (parent) {
+      // jika punya banyak gambar (dari data-images)
+      currentImages = JSON.parse(parent.getAttribute("data-images"));
+    } else {
+      // jika hanya 1 gambar biasa
+      currentImages = [img.src];
+    }
+
     currentIndex = 0;
     openPopup(currentImages[currentIndex]);
   });
 });
 
-// Buka popup dengan gambar
+// ==== 2️⃣ Fungsi buka popup ====
 function openPopup(src) {
   popup.style.display = "block";
   popup.classList.add("fade-in");
 
-  // tampilkan loader
   loader.style.display = "block";
   popupImg.style.opacity = "0";
 
@@ -1601,26 +1608,14 @@ function openPopup(src) {
     loader.style.display = "none";
     popupImg.style.opacity = "1";
   };
+
+  // tampilkan tombol navigasi jika lebih dari 1 gambar
+  const showNav = currentImages.length > 1;
+  nextBtn.style.display = showNav ? "block" : "none";
+  prevBtn.style.display = showNav ? "block" : "none";
 }
 
-// Tombol navigasi
-nextBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (!currentImages.length) return;
-
-  currentIndex = (currentIndex + 1) % currentImages.length;
-  changeImage(currentImages[currentIndex]);
-});
-
-prevBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (!currentImages.length) return;
-
-  currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
-  changeImage(currentImages[currentIndex]);
-});
-
-// Fungsi ganti gambar dengan loader
+// ==== 3️⃣ Fungsi ganti gambar (dengan loader) ====
 function changeImage(src) {
   loader.style.display = "block";
   popupImg.style.opacity = "0";
@@ -1634,18 +1629,31 @@ function changeImage(src) {
   };
 }
 
-// Tutup popup
-closeBtn.addEventListener("click", () => {
-  popup.style.display = "none";
-  popup.classList.remove("fade-in");
+// ==== 4️⃣ Navigasi tombol ====
+nextBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  if (!currentImages.length) return;
+  currentIndex = (currentIndex + 1) % currentImages.length;
+  changeImage(currentImages[currentIndex]);
 });
 
-popup.addEventListener("click", (e) => {
-  if (e.target === popup) {
-    popup.style.display = "none";
-    popup.classList.remove("fade-in");
-  }
+prevBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  if (!currentImages.length) return;
+  currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+  changeImage(currentImages[currentIndex]);
 });
+
+// ==== 5️⃣ Tutup popup ====
+closeBtn.addEventListener("click", () => closePopup());
+popup.addEventListener("click", e => {
+  if (e.target === popup) closePopup();
+});
+
+function closePopup() {
+  popup.style.display = "none";
+  popup.classList.remove("fade-in");
+}
     </script>
 </body>
 
